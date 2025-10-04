@@ -13,7 +13,7 @@ class BibliotecaApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Biblioteca",
-      theme:  ThemeData(),
+      theme:  ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.red), useMaterial3: true),
       home: BibliotecaHome(),
     );
   }
@@ -31,30 +31,47 @@ class BibliotecaState extends State<BibliotecaHome> {
   String busca = "";
 
   final Map<String, List<String>> generos = {
-    "Ficção": [],
-    "Não Ficção": [],
-    "Aventura": [],
-    "Fantasia": []
+    "Ficção": [
+      "1984 - George Orwell", 
+      "Admirável Mundo Novo - Aldous Huxley",  
+      "Neuromancer - William Gibson"
+    ],
+    "Não Ficção": [
+      "Sapiens - Yuval Noah Harari", 
+      "A Arte da Guerra - Sun Tzu", 
+      "O Gene - Siddhartha Mukherjee"
+    ],
+    "Aventura": [
+      "Robinson Crusoé - Daniel Defoe", 
+      "A Ilha do Tesouro - Robert Louis Stevenson", 
+      "Viagem  ao Centro da Terra - Júlio Verne"
+    ],
+    "Fantasia": [
+      "Senhor dos Anéis - J.R.R. Tolkien", 
+      "Harry Potter - J.K. Rowling", 
+      "As Crônicas do Gelo e Fogo - George R.R. Martin"
+    ],
   };
+  final TextEditingController clearController = TextEditingController();
 
   List<String> get generosAtuais => 
     generos[generoSelecionado] ?? const <String>[];
 
-  Future<void> editarGenero(BuildContext context, int indexReal) async { 
+  Future<void> editarLivro(BuildContext context, int indexReal) async { 
     if (indexReal < 0 || indexReal >= generosAtuais.length) return; 
  
-    final racaAtual = generosAtuais[indexReal]; 
-    final controller = TextEditingController(text: racaAtual); 
+    final livroAtual = generosAtuais[indexReal]; 
+    final controller = TextEditingController(text: livroAtual); 
  
-    final novaRaca = await showDialog<String?>( 
+    final novoLivro = await showDialog<String?>( 
       context: context, 
       builder: (ctx) => AlertDialog( 
-        title: const Text('Editar raça'), 
+        title: const Text('Editar livro'), 
         content: TextField( 
           controller: controller, 
           autofocus: true, 
           decoration: const InputDecoration( 
-            labelText: 'Nome da raça', 
+            labelText: 'Nome do livro', 
             border: OutlineInputBorder(), 
           ), 
           textInputAction: TextInputAction.done, 
@@ -73,38 +90,38 @@ class BibliotecaState extends State<BibliotecaHome> {
       ), 
     ); 
  
-    if (novaRaca == null) return; 
-    if (novaRaca.isEmpty) { 
+    if (novoLivro == null) return; 
+    if (novoLivro.isEmpty) { 
       exibirMensagem('O nome não pode ser vazio.'); 
       return; 
     } 
  
     final jaExiste = generosAtuais.any( 
-      (r) => r.toLowerCase() == novaRaca.toLowerCase(), 
+      (r) => r.toLowerCase() == novoLivro.toLowerCase(), 
     ); 
-    if (jaExiste && novaRaca.toLowerCase() != racaAtual.toLowerCase()) { 
-      exibirMensagem('Já existe uma raça com esse nome.'); 
+    if (jaExiste && novoLivro.toLowerCase() != livroAtual.toLowerCase()) { 
+      exibirMensagem('Já existe um livro com esse nome.'); 
       return; 
     } 
  
     setState(() { 
-      generosAtuais[indexReal] = _capitalizar(novaRaca); 
+      generosAtuais[indexReal] = _capitalizar(novoLivro); 
     }); 
-    exibirMensagem('Raça atualizada para "${generosAtuais[indexReal]}".'); 
+    exibirMensagem('Livro atualizado para "${generosAtuais[indexReal]}".'); 
   } 
 
   Future<void> adicionarLivro(BuildContext context) async { 
     final textController = TextEditingController();  
  
-    final novaRaca = await showDialog<String?>( 
+    final novoLivro = await showDialog<String?>( 
       context: context, 
       builder: (ctx) => AlertDialog( 
-        title: const Text('Adicionar raça'), 
+        title: const Text('Adicionar livro'), 
         content: TextField( 
           controller: textController, 
           autofocus: true, 
           decoration: const InputDecoration( 
-            labelText: 'Nome da raça', 
+            labelText: 'Nome do livro', 
             border: OutlineInputBorder(), 
           ), 
           onSubmitted: (_) => Navigator.of(ctx).pop(textController.text.trim()), 
@@ -122,73 +139,54 @@ class BibliotecaState extends State<BibliotecaHome> {
       ), 
     ); 
  
-    if (novaRaca == null) return; 
-    if (novaRaca.isEmpty) { 
+    if (novoLivro == null) return; 
+    if (novoLivro.isEmpty) { 
       exibirMensagem('O nome não pode ser vazio.'); 
       return; 
     } 
  
     final jaExiste = generosAtuais.any( 
-      (r) => r.toLowerCase() == novaRaca.toLowerCase(), 
+      (r) => r.toLowerCase() == novoLivro.toLowerCase(), 
     ); 
     if (jaExiste) { 
-      exibirMensagem('Já existe uma raça com esse nome.'); 
+      exibirMensagem('Já existe um livro com esse nome.'); 
       return; 
     } 
  
     setState(() { 
-      generosAtuais.add(_capitalizar(novaRaca));
+      generosAtuais.add(_capitalizar(novoLivro));
     }); 
-    exibirMensagem('Raça "${_capitalizar(novaRaca)}" adicionada.'); 
+    exibirMensagem('Livro "${_capitalizar(novoLivro)}" adicionado.'); 
   } 
 
-  Future<void> adicionarGenero(BuildContext context) async { 
-    final textController = TextEditingController();  
+  Future<void> excluirLivro(BuildContext context, int indexReal) async { 
+    if (indexReal < 0 || indexReal >= generosAtuais.length) return; 
+    final livro = generosAtuais[indexReal]; 
  
-    final novaRaca = await showDialog<String?>( 
+    final confirmar = await showDialog<bool>( 
       context: context, 
       builder: (ctx) => AlertDialog( 
-        title: const Text('Adicionar raça'), 
-        content: TextField( 
-          controller: textController, 
-          autofocus: true, 
-          decoration: const InputDecoration( 
-            labelText: 'Nome da raça', 
-            border: OutlineInputBorder(), 
-          ), 
-          onSubmitted: (_) => Navigator.of(ctx).pop(textController.text.trim()), 
-        ), 
+        title: const Text('Excluir livro'), 
+        content: Text('Tem certeza que deseja excluir "$livro"?'), 
         actions: [ 
           TextButton( 
-            onPressed: () => Navigator.of(ctx).pop(null), 
+            onPressed: () => Navigator.of(ctx).pop(false), 
             child: const Text('Cancelar'), 
           ), 
-          FilledButton( 
-            onPressed: () => Navigator.of(ctx).pop(textController.text.trim()), 
-            child: const Text('Adicionar'), 
+          FilledButton.tonal( 
+            onPressed: () => Navigator.of(ctx).pop(true), 
+            child: const Text('Excluir'), 
           ), 
         ], 
       ), 
     ); 
  
-    if (novaRaca == null) return; 
-    if (novaRaca.isEmpty) { 
-      exibirMensagem('O nome não pode ser vazio.'); 
-      return; 
-    } 
- 
-    final jaExiste = generosAtuais.any( 
-      (r) => r.toLowerCase() == novaRaca.toLowerCase(), 
-    ); 
-    if (jaExiste) { 
-      exibirMensagem('Já existe uma raça com esse nome.'); 
-      return; 
-    } 
+    if (confirmar != true) return; 
  
     setState(() { 
-      generosAtuais.add(_capitalizar(novaRaca));
+      generosAtuais.removeAt(indexReal); 
     }); 
-    exibirMensagem('Raça "${_capitalizar(novaRaca)}" adicionada.'); 
+    exibirMensagem('Livro "$livro" excluída.'); 
   } 
 
   List<String> get generosFiltrados =>
@@ -209,15 +207,25 @@ class BibliotecaState extends State<BibliotecaHome> {
 
   DropdownButtonFormField<String> mainDropdown(Map<String, List<String>> itens) {
     return DropdownButtonFormField<String>(
-      hint: Text("Selecione o gênero"),
+      hint: Row(
+        children: [
+          Icon(Icons.bookmark),
+          SizedBox(width: 8),
+          Text("Selecione um gênero")
+        ],
+      ),
       initialValue: generoSelecionado,
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+      ),
       icon: Icon(Icons.arrow_drop_down),
       items: itens.keys.map((genero) {
         return DropdownMenuItem<String>(
           value: genero,
           child: Row(
             children: [
-              Icon(Icons.add),
+              Icon(Icons.bookmark),
+              SizedBox(width: 8),
               Text(genero)
             ],
           )
@@ -227,6 +235,7 @@ class BibliotecaState extends State<BibliotecaHome> {
         setState(() {
           generoSelecionado = selecao;
           busca = "";
+          clearController.text = "";
         });
       }
     );
@@ -238,16 +247,25 @@ class BibliotecaState extends State<BibliotecaHome> {
       appBar: AppBar(
         title: Text("Biblioteca Flutter - Lucas e Paulo"),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: generoSelecionado == null 
+                    ? () => exibirMensagem('Selecione um gênero antes de adicionar.') 
+                    : () => adicionarLivro(context),
+        tooltip: 'Adicionar Livro',
+        child: Icon(Icons.add),
+      ),
       body: Padding(padding: EdgeInsets.all(18), 
         child: Column(
           children: [
             mainDropdown(generos),
             SizedBox(height: 12), 
-            TextField( 
+            TextField(
+              controller: clearController,
+              enabled: generoSelecionado != null,
               decoration: const InputDecoration( 
                 border: OutlineInputBorder(), 
                 prefixIcon: Icon(Icons.search), 
-                hintText: 'Buscar livro...', 
+                hintText: "Buscar livro", 
               ), 
               onChanged: (txt) {
                 setState(() {
@@ -273,12 +291,12 @@ class BibliotecaState extends State<BibliotecaHome> {
                             IconButton( 
                               tooltip: 'Editar', 
                               icon: const Icon(Icons.edit, color: Colors.blue), 
-                              onPressed: () {}, 
+                              onPressed: () => editarLivro(context, generosFiltrados.indexOf(livro))
                             ), 
                             IconButton( 
                             tooltip: 'Excluir', 
                               icon: const Icon(Icons.delete, color: Colors.red), 
-                              onPressed: () {}, 
+                              onPressed: () => excluirLivro(context, generosFiltrados.indexOf(livro))
                             ), 
                           ], 
                         ), 
@@ -287,6 +305,17 @@ class BibliotecaState extends State<BibliotecaHome> {
                     }, 
                   ), 
             ), 
+            SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // ElevatedButton.icon(
+                //   icon: Icon(Icons.add),
+                //   label: Text("Adicionar Gênero"),
+                //   onPressed: () => adicionarGenero(context)
+                // ),
+              ],
+            )
           ],
         ),
       )
