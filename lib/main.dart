@@ -177,7 +177,7 @@ class BibliotecaState extends State<BibliotecaHome> {
             onPressed: () => Navigator.of(ctx).pop(false), 
             child: const Text('Cancelar'), 
           ), 
-          FilledButton.tonal( 
+          FilledButton( 
             onPressed: () => Navigator.of(ctx).pop(true), 
             child: const Text('Excluir'), 
           ), 
@@ -190,7 +190,7 @@ class BibliotecaState extends State<BibliotecaHome> {
     setState(() { 
       livrosAtuais.removeAt(indexReal); 
     }); 
-    exibirMensagem('Livro "$livro" excluída.'); 
+    exibirMensagem('Livro "$livro" excluído.'); 
   }
 
   // Fim das funções para manipular livros
@@ -245,8 +245,10 @@ class BibliotecaState extends State<BibliotecaHome> {
     } 
  
     setState(() { 
+      List<String> livros = livrosAtuais; 
       generos.remove(generoAtual);
-      generos[_capitalizar(novoGenero)] = livrosAtuais; 
+      generoSelecionado = _capitalizar(novoGenero);
+      generos[_capitalizar(novoGenero)] = livros;
     }); 
     exibirMensagem('Gênero $generoAtual atualizado para "${_capitalizar(novoGenero)}"'); 
   }
@@ -295,6 +297,7 @@ class BibliotecaState extends State<BibliotecaHome> {
 
     setState(() { 
       generos[ _capitalizar(novoGenero)] = [];
+      generoSelecionado = _capitalizar(novoGenero);
     }); 
     exibirMensagem('Gênero "${_capitalizar(novoGenero)}" adicionado.'); 
   }
@@ -312,7 +315,7 @@ class BibliotecaState extends State<BibliotecaHome> {
             onPressed: () => Navigator.of(ctx).pop(false), 
             child: const Text('Cancelar'), 
           ), 
-          FilledButton.tonal( 
+          FilledButton( 
             onPressed: () => Navigator.of(ctx).pop(true), 
             child: const Text('Excluir'), 
           ), 
@@ -323,9 +326,10 @@ class BibliotecaState extends State<BibliotecaHome> {
     if (confirmar != true) return; 
  
     setState(() { 
-      generos.remove(genero); 
+      generos.remove(genero);
+      generoSelecionado = null;
     }); 
-    exibirMensagem('Gênero "$genero" excluída.'); 
+    exibirMensagem('Gênero "$genero" excluído.'); 
   }
 
   // Fim das funções para manipular gêneros
@@ -387,7 +391,13 @@ class BibliotecaState extends State<BibliotecaHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Biblioteca Flutter - Lucas e Paulo"),
+        title: Text(
+          "Biblioteca Flutter",
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: generoSelecionado == null 
@@ -448,14 +458,49 @@ class BibliotecaState extends State<BibliotecaHome> {
                   ), 
             ), 
             SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // ElevatedButton.icon(
-                //   icon: Icon(Icons.add),
-                //   label: Text("Adicionar Gênero"),
-                //   onPressed: () => adicionarGenero(context)
-                // ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: generoSelecionado == null ? 
+              [
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () => adicionarGenero(context),
+                      icon: Icon(Icons.add),
+                      label: Text("Adicionar Gênero"),
+                    ),
+                  ],
+                )
+              ] : [
+               Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => adicionarGenero(context),
+                    icon: Icon(Icons.add),
+                    label: Text("Adicionar Gênero"),
+                  ),
+                ],
+               ),
+               SizedBox(height: 10),
+               Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () => editarGenero(context, generoSelecionado!),
+                    icon: Icon(Icons.edit),
+                    label: Text("Editar Gênero"),
+                  ),
+                ],
+               ),
+               SizedBox(height: 10),
+               Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => excluirGenero(context, generoSelecionado!),
+                    icon: Icon(Icons.delete),
+                    label: Text( "Excluir Gênero")
+                  ),
+                ],
+               )
               ],
             )
           ],
