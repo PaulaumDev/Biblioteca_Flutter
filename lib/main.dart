@@ -1,4 +1,3 @@
-// Lucas Gabriel e Paulo Vitor - 2º INF
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,7 +12,10 @@ class BibliotecaApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Biblioteca",
-      theme:  ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.red), useMaterial3: true),
+      theme:  ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red), 
+        useMaterial3: true
+      ),
       home: BibliotecaHome(),
     );
   }
@@ -54,13 +56,15 @@ class BibliotecaState extends State<BibliotecaHome> {
   };
   final TextEditingController clearController = TextEditingController();
 
-  List<String> get generosAtuais => 
+  List<String> get livrosAtuais => 
     generos[generoSelecionado] ?? const <String>[];
 
+  // Funções para manipular livros
+
   Future<void> editarLivro(BuildContext context, int indexReal) async { 
-    if (indexReal < 0 || indexReal >= generosAtuais.length) return; 
- 
-    final livroAtual = generosAtuais[indexReal]; 
+    if (indexReal < 0 || indexReal >= livrosAtuais.length) return; 
+
+    final livroAtual = livrosAtuais[indexReal]; 
     final controller = TextEditingController(text: livroAtual); 
  
     final novoLivro = await showDialog<String?>( 
@@ -96,7 +100,7 @@ class BibliotecaState extends State<BibliotecaHome> {
       return; 
     } 
  
-    final jaExiste = generosAtuais.any( 
+    final jaExiste = livrosAtuais.any( 
       (r) => r.toLowerCase() == novoLivro.toLowerCase(), 
     ); 
     if (jaExiste && novoLivro.toLowerCase() != livroAtual.toLowerCase()) { 
@@ -105,9 +109,9 @@ class BibliotecaState extends State<BibliotecaHome> {
     } 
  
     setState(() { 
-      generosAtuais[indexReal] = _capitalizar(novoLivro); 
+      livrosAtuais[indexReal] = _capitalizar(novoLivro); 
     }); 
-    exibirMensagem('Livro atualizado para "${generosAtuais[indexReal]}".'); 
+    exibirMensagem('Livro atualizado para "${livrosAtuais[indexReal]}".'); 
   } 
 
   Future<void> adicionarLivro(BuildContext context) async { 
@@ -145,7 +149,7 @@ class BibliotecaState extends State<BibliotecaHome> {
       return; 
     } 
  
-    final jaExiste = generosAtuais.any( 
+    final jaExiste = livrosAtuais.any( 
       (r) => r.toLowerCase() == novoLivro.toLowerCase(), 
     ); 
     if (jaExiste) { 
@@ -154,14 +158,14 @@ class BibliotecaState extends State<BibliotecaHome> {
     } 
  
     setState(() { 
-      generosAtuais.add(_capitalizar(novoLivro));
+      livrosAtuais.add(_capitalizar(novoLivro));
     }); 
     exibirMensagem('Livro "${_capitalizar(novoLivro)}" adicionado.'); 
   } 
 
   Future<void> excluirLivro(BuildContext context, int indexReal) async { 
-    if (indexReal < 0 || indexReal >= generosAtuais.length) return; 
-    final livro = generosAtuais[indexReal]; 
+    if (indexReal < 0 || indexReal >= livrosAtuais.length) return; 
+    final livro = livrosAtuais[indexReal]; 
  
     final confirmar = await showDialog<bool>( 
       context: context, 
@@ -184,15 +188,153 @@ class BibliotecaState extends State<BibliotecaHome> {
     if (confirmar != true) return; 
  
     setState(() { 
-      generosAtuais.removeAt(indexReal); 
+      livrosAtuais.removeAt(indexReal); 
     }); 
     exibirMensagem('Livro "$livro" excluída.'); 
-  } 
+  }
+
+  // Fim das funções para manipular livros
+  // --------------------------------------
+
+  // Funções para manipular gêneros 
+
+  Future<void> editarGenero(BuildContext context, String genero) async {
+    if (!generos.containsKey(genero)) return; 
+ 
+    final generoAtual = genero; 
+    final controller = TextEditingController(text: generoAtual); 
+ 
+    final novoGenero = await showDialog<String?>( 
+      context: context, 
+      builder: (ctx) => AlertDialog( 
+        title: const Text('Editar Gênero'), 
+        content: TextField( 
+          controller: controller, 
+          autofocus: true, 
+          decoration: const InputDecoration( 
+            labelText: 'Nome do Gênero', 
+            border: OutlineInputBorder(), 
+          ), 
+          textInputAction: TextInputAction.done, 
+          onSubmitted: (_) => Navigator.of(ctx).pop(controller.text.trim()), 
+        ), 
+        actions: [ 
+          TextButton( 
+            onPressed: () => Navigator.of(ctx).pop(null), 
+            child: const Text('Cancelar'), 
+          ), 
+          FilledButton( 
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()), 
+            child: const Text('Salvar'), 
+          ), 
+        ], 
+      ), 
+    ); 
+ 
+    if (novoGenero == null) return; 
+    if (novoGenero.isEmpty) { 
+      exibirMensagem('O nome não pode ser vazio.'); 
+      return; 
+    } 
+ 
+    final jaExiste = generos.containsKey(novoGenero);
+
+    if (jaExiste && novoGenero.toLowerCase() != generoAtual.toLowerCase()) { 
+      exibirMensagem('Já existe esse gênero.'); 
+      return; 
+    } 
+ 
+    setState(() { 
+      generos.remove(generoAtual);
+      generos[_capitalizar(novoGenero)] = livrosAtuais; 
+    }); 
+    exibirMensagem('Gênero $generoAtual atualizado para "${_capitalizar(novoGenero)}"'); 
+  }
+
+  Future<void> adicionarGenero(BuildContext context) async { 
+     final textController = TextEditingController();  
+ 
+    final novoGenero = await showDialog<String?>( 
+      context: context, 
+      builder: (ctx) => AlertDialog( 
+        title: const Text('Adicionar gênero'), 
+        content: TextField( 
+          controller: textController, 
+          autofocus: true, 
+          decoration: const InputDecoration( 
+            labelText: 'Nome do gênero', 
+            border: OutlineInputBorder(), 
+          ), 
+          onSubmitted: (_) => Navigator.of(ctx).pop(textController.text.trim()), 
+        ), 
+        actions: [ 
+          TextButton( 
+            onPressed: () => Navigator.of(ctx).pop(null), 
+            child: const Text('Cancelar'), 
+          ), 
+          FilledButton( 
+            onPressed: () => Navigator.of(ctx).pop(textController.text.trim()), 
+            child: const Text('Adicionar'), 
+          ), 
+        ], 
+      ), 
+    ); 
+ 
+    if (novoGenero == null) return; 
+    if (novoGenero.isEmpty) { 
+      exibirMensagem('O nome não pode ser vazio.'); 
+      return; 
+    } 
+ 
+    final jaExiste = generos.containsKey(novoGenero); 
+    
+    if (jaExiste) { 
+      exibirMensagem('Já existe esse gênero.'); 
+      return; 
+    } 
+
+    setState(() { 
+      generos[ _capitalizar(novoGenero)] = [];
+    }); 
+    exibirMensagem('Gênero "${_capitalizar(novoGenero)}" adicionado.'); 
+  }
+
+  Future<void> excluirGenero(BuildContext context, String genero) async {
+    if (!generos.containsKey(genero)) return; 
+
+    final confirmar = await showDialog<bool>( 
+      context: context, 
+      builder: (ctx) => AlertDialog( 
+        title: const Text('Excluir livro'), 
+        content: Text('Tem certeza que deseja excluir "$genero"?'), 
+        actions: [ 
+          TextButton( 
+            onPressed: () => Navigator.of(ctx).pop(false), 
+            child: const Text('Cancelar'), 
+          ), 
+          FilledButton.tonal( 
+            onPressed: () => Navigator.of(ctx).pop(true), 
+            child: const Text('Excluir'), 
+          ), 
+        ], 
+      ), 
+    ); 
+ 
+    if (confirmar != true) return; 
+ 
+    setState(() { 
+      generos.remove(genero); 
+    }); 
+    exibirMensagem('Gênero "$genero" excluída.'); 
+  }
+
+  // Fim das funções para manipular gêneros
+  // --------------------------------------
 
   List<String> get generosFiltrados =>
     busca.isEmpty
-      ? generosAtuais
-      : generosAtuais.where((r) => r.toLowerCase().contains(busca.toLowerCase())).toList();
+      ? livrosAtuais
+      : livrosAtuais.where((r) => r.toLowerCase().contains(busca.toLowerCase())).toList();
 
   void exibirMensagem(String msg) { 
     ScaffoldMessenger.of(context) 
